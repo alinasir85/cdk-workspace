@@ -23,13 +23,11 @@ export class HitCounter extends Construct {
             handler: 'hitCounterDynamo.handler',
             code: Code.fromAsset('lambda'),
             environment: {
-                DOWNSTREAM_FUNCTION_NAME: props.downstream.functionName,
                 HITS_TABLE_NAME: table.tableName,
                 HITS_TOPIC_ARN: props.snsTopic.topicArn,
             },
         });
-        props.downstream.grantInvoke(this.handler);
         table.grantReadWriteData(this.handler);
-        props.snsTopic.addSubscription(new subs.LambdaSubscription(this.handler));
+        //props.snsTopic.addSubscription(new subs.LambdaSubscription(this.handler));
     }
 }

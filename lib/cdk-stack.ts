@@ -6,7 +6,7 @@ import * as subs from 'aws-cdk-lib/aws-sns-subscriptions';
 import * as lambda from 'aws-cdk-lib/aws-lambda';
 import { LambdaRestApi } from 'aws-cdk-lib/aws-apigateway';
 import * as lambdaEventSources from 'aws-cdk-lib/aws-lambda-event-sources';
-import {Effect, PolicyStatement, ServicePrincipal} from 'aws-cdk-lib/aws-iam';
+import {AnyPrincipal, Effect, PolicyStatement} from 'aws-cdk-lib/aws-iam';
 import { HitCounter } from './hitcounter';
 
 export class CdkStack extends Stack {
@@ -16,13 +16,26 @@ export class CdkStack extends Stack {
     const snsTopic = new sns.Topic(this, 'HitCounterTopic');
     snsTopic.addSubscription(new subs.SqsSubscription(queue));
 
+    // Modify the queue's access policy to allow receiving messages from anywhere
+    const accessPolicy = new sqs.QueuePolicy(this, 'MyQueuePolicy', {
+      queues: [queue],
+    });
+    accessPolicy.document.addStatements(
+        new PolicyStatement({
+          effect: Effect.ALLOW,
+          principals: [new AnyPrincipal()],
+          actions: ['SQS:*'],
+          resources: [queue.queueArn],
+        })
+    );
+
     const responseHandler = new lambda.Function(this, 'responseHandler', {
       runtime: lambda.Runtime.NODEJS_18_X,
       code: lambda.Code.fromAsset('lambda'),
       handler: 'response.handler',
     });
     responseHandler.addEventSource(new lambdaEventSources.SqsEventSource(queue));
-    queue.grantConsumeMessages(responseHandler);
+    //snsTopic.addSubscription(new subs.LambdaSubscription(responseHandler));
 
     const hitCounterWithDownstreamHandler = new HitCounter(this, 'hitCounterWithDownstreamHandler', {
       downstream: responseHandler,
