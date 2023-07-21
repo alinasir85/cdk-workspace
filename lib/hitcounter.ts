@@ -28,6 +28,5 @@ export class HitCounter extends Construct {
             },
         });
         table.grantReadWriteData(this.handler);
-        //props.snsTopic.addSubscription(new subs.LambdaSubscription(this.handler));
     }
 }
