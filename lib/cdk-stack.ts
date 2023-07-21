@@ -15,8 +15,6 @@ export class CdkStack extends Stack {
     const queue = new sqs.Queue(this, 'ResponseQueue');
     const snsTopic = new sns.Topic(this, 'HitCounterTopic');
     snsTopic.addSubscription(new subs.SqsSubscription(queue));
-
-    // Modify the queue's access policy to allow receiving messages from anywhere
     const accessPolicy = new sqs.QueuePolicy(this, 'MyQueuePolicy', {
       queues: [queue],
     });
@@ -35,7 +33,6 @@ export class CdkStack extends Stack {
       handler: 'response.handler',
     });
     responseHandler.addEventSource(new lambdaEventSources.SqsEventSource(queue));
-    //snsTopic.addSubscription(new subs.LambdaSubscription(responseHandler));
 
     const hitCounterWithDownstreamHandler = new HitCounter(this, 'hitCounterWithDownstreamHandler', {
       downstream: responseHandler,
