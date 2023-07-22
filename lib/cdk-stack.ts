@@ -4,9 +4,10 @@ import * as sns from 'aws-cdk-lib/aws-sns';
 import * as sqs from 'aws-cdk-lib/aws-sqs';
 import * as subs from 'aws-cdk-lib/aws-sns-subscriptions';
 import * as lambda from 'aws-cdk-lib/aws-lambda';
-import { LambdaRestApi } from 'aws-cdk-lib/aws-apigateway';
+import {Cors, CorsOptions, LambdaRestApi} from 'aws-cdk-lib/aws-apigateway';
 import {AnyPrincipal, Effect, PolicyStatement} from 'aws-cdk-lib/aws-iam';
 import { HitCounter } from './hitcounter';
+import {SqsEventSource} from "aws-cdk-lib/aws-lambda-event-sources";
 
 export class CdkStack extends Stack {
   constructor(scope: Construct, id: string, props?: StackProps) {
@@ -31,11 +32,22 @@ export class CdkStack extends Stack {
       code: lambda.Code.fromAsset('lambda'),
       handler: 'response.handler',
     });
-    //responseHandler.addEventSource(new lambdaEventSources.SqsEventSource(queue));
+    responseHandler.addToRolePolicy(
+        new PolicyStatement({
+          effect: Effect.ALLOW,
+          actions: ['sqs:*'],
+          resources: [queue.queueArn],
+        })
+    );
+    responseHandler.addToRolePolicy(new PolicyStatement({
+          actions: ['sns:Publish'],
+          resources: [snsTopic.topicArn],
+    }));
+    responseHandler.addEventSource(new SqsEventSource(queue));
 
     const hitCounterWithDownstreamHandler = new HitCounter(this, 'hitCounterWithDownstreamHandler', {
       downstream: responseHandler,
-      snsTopic,
+      snsTopic
     });
     hitCounterWithDownstreamHandler.handler.addToRolePolicy(new PolicyStatement({
       actions: ['sns:Publish'],
@@ -43,8 +55,12 @@ export class CdkStack extends Stack {
     }));
     hitCounterWithDownstreamHandler.handler.addEnvironment('HITS_TOPIC_ARN', snsTopic.topicArn);
 
+    const corsOptions: CorsOptions = {
+          allowOrigins: Cors.ALL_ORIGINS,
+    };
     new LambdaRestApi(this, 'Endpoint', {
-      handler: hitCounterWithDownstreamHandler.handler,
+          handler: hitCounterWithDownstreamHandler.handler,
+          defaultCorsPreflightOptions: corsOptions,
     });
   }
 }

@@ -1,4 +1,5 @@
-const {Lambda} = require('aws-sdk');
+const AWS = require('aws-sdk');
+const sns = new AWS.SNS();
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient({
     datasources: {
@@ -9,8 +10,18 @@ const prisma = new PrismaClient({
 });
 
 exports.handler = async function (event) {
-    console.log("request:", JSON.stringify(event,undefined,2));
-    const lambda = new Lambda();
+    console.log("REQUEST:", event);
+    if (event?.Records) {
+        console.log("\nRECEIVED RESPONSE FROM RESPONSE HANDLER");
+        const messageBody = JSON.parse(event?.Records[0]?.Sns?.Message);
+        console.log("\nSNS: ",messageBody.message)
+        return {
+            statusCode: 200,
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ counter: 434534 }),
+        };
+    }
+    console.log("\nProcessing counter");
     const id = 0;
     const existingHit = await prisma.hits.findUnique({ where: { id } });
     if (existingHit) {
@@ -23,12 +34,15 @@ exports.handler = async function (event) {
             data: { id, counter: 1 },
         });
     }
-    console.log("invoking with existingHit: ",existingHit,process.env.DOWNSTREAM_FUNCTION_NAME)
-    event.counter = existingHit ? existingHit.counter + 1 : 1;
-    const resp = await lambda.invoke({
-        FunctionName: process.env.DOWNSTREAM_FUNCTION_NAME,
-        Payload: JSON.stringify(event)
+    const newCounterValue = existingHit ? existingHit.counter + 1 : 1;
+    const snsResponse = await sns.publish({
+        TopicArn: process.env.HITS_TOPIC_ARN,
+        Message: JSON.stringify({ counter: newCounterValue, fromHitCounter: true, topicArn: process.env.HITS_TOPIC_ARN }),
     }).promise();
-    console.log('downstream response:', JSON.stringify(resp, undefined, 2));
-    return JSON.parse(resp.Payload);
+    console.log("SNS Publish Response:", snsResponse);
+    return {
+        statusCode: 200,
+        headers: { "Content-Type": "application/json" },
+        body: `You've hit URL ${newCounterValue} times!`,
+    };
 }

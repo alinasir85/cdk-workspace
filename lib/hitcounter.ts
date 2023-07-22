@@ -1,6 +1,7 @@
 import { Code, Function, IFunction, Runtime } from 'aws-cdk-lib/aws-lambda';
 import { Construct } from 'constructs';
 import * as sns from 'aws-cdk-lib/aws-sns';
+import * as subs from 'aws-cdk-lib/aws-sns-subscriptions';
 
 export interface HitCounterProps {
     downstream: IFunction;
@@ -17,9 +18,9 @@ export class HitCounter extends Construct {
             code: Code.fromAsset('lambda'),
             environment: {
                 DOWNSTREAM_FUNCTION_NAME: props.downstream.functionName,
-                HITS_TOPIC_ARN: props.snsTopic.topicArn,
+                HITS_TOPIC_ARN: props.snsTopic.topicArn
             }
         });
-        props.downstream.grantInvoke(this.handler);
+        props.snsTopic.addSubscription(new subs.LambdaSubscription(this.handler));
     }
 }
