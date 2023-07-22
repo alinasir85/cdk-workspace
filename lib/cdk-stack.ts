@@ -5,7 +5,6 @@ import * as sqs from 'aws-cdk-lib/aws-sqs';
 import * as subs from 'aws-cdk-lib/aws-sns-subscriptions';
 import * as lambda from 'aws-cdk-lib/aws-lambda';
 import { LambdaRestApi } from 'aws-cdk-lib/aws-apigateway';
-import * as lambdaEventSources from 'aws-cdk-lib/aws-lambda-event-sources';
 import {AnyPrincipal, Effect, PolicyStatement} from 'aws-cdk-lib/aws-iam';
 import { HitCounter } from './hitcounter';
 
@@ -32,7 +31,7 @@ export class CdkStack extends Stack {
       code: lambda.Code.fromAsset('lambda'),
       handler: 'response.handler',
     });
-    responseHandler.addEventSource(new lambdaEventSources.SqsEventSource(queue));
+    //responseHandler.addEventSource(new lambdaEventSources.SqsEventSource(queue));
 
     const hitCounterWithDownstreamHandler = new HitCounter(this, 'hitCounterWithDownstreamHandler', {
       downstream: responseHandler,
