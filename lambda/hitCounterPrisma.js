@@ -11,17 +11,6 @@ const prisma = new PrismaClient({
 
 exports.handler = async function (event) {
     console.log("REQUEST:", event);
-    if (event?.Records) {
-        console.log("\nRECEIVED RESPONSE FROM RESPONSE HANDLER");
-        const messageBody = JSON.parse(event?.Records[0]?.Sns?.Message);
-        console.log("\nSNS: ",messageBody.message)
-        return {
-            statusCode: 200,
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ counter: 434534 }),
-        };
-    }
-    console.log("\nProcessing counter");
     const id = 0;
     const existingHit = await prisma.hits.findUnique({ where: { id } });
     if (existingHit) {

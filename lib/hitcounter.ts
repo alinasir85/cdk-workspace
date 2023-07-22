@@ -17,10 +17,8 @@ export class HitCounter extends Construct {
             handler: 'hitCounterPrisma.handler',
             code: Code.fromAsset('lambda'),
             environment: {
-                DOWNSTREAM_FUNCTION_NAME: props.downstream.functionName,
                 HITS_TOPIC_ARN: props.snsTopic.topicArn
             }
         });
-        props.snsTopic.addSubscription(new subs.LambdaSubscription(this.handler));
     }
 }
