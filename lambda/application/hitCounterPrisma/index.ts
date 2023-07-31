@@ -1,4 +1,7 @@
+import {logMiddleware} from "/opt/logMiddleware/logMiddleware";
+import {APIGatewayEvent} from "aws-lambda";
 const { PrismaClient } = require('@prisma/client');
+
 const prisma = new PrismaClient({
     datasources: {
         db: {
@@ -6,8 +9,9 @@ const prisma = new PrismaClient({
         },
     },
 });
-exports.handler = async function (event) {
-    console.log("REQUEST:", event);
+
+exports.handler = logMiddleware(async function (event: APIGatewayEvent,context: any) {
+    context.logger.log("*****  In hitCounter ***********");
     const id = 0;
     const existingHit = await prisma.hits.findUnique({ where: { id } });
     if (existingHit) {
@@ -21,9 +25,10 @@ exports.handler = async function (event) {
         });
     }
     const newCounterValue = existingHit ? existingHit.counter + 1 : 1;
+    context.logger.log(" returning : ", newCounterValue);
     return {
         statusCode: 200,
         headers: { "Content-Type": "application/json" },
         body: `You've hit URL ${newCounterValue} times!`,
     };
-}
+});

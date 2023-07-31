@@ -5,16 +5,20 @@ import {LambdaIntegration, LambdaRestApi, RestApi} from 'aws-cdk-lib/aws-apigate
 import {HitCounter} from './constructs/HitCounter';
 import {OpenSearchWithCloudWatch, OpenSearchWithCloudWatchProps} from "./constructs/OpenSearchWithCloudWatch";
 import {APIGateway} from "aws-sdk";
+import {LogMiddlewareLayerFactory} from "./factories/LogMiddlewareLayerFactory";
 
 export class CdkStack extends Stack {
     constructor(scope: Construct, id: string, props?: StackProps) {
         super(scope, id, props);
-        const hitCounterWithDownstreamHandler = new HitCounter(this, 'hitCounterWithDownstreamHandler');
+
+        const logLayer = new LogMiddlewareLayerFactory(this,"LogLayer");
+
+        const hitCounterWithDownstreamHandler = new HitCounter(this, 'hitCounterWithDownstreamHandler',logLayer.getLayer());
         new LambdaRestApi(this, 'Endpoint', {
             handler: hitCounterWithDownstreamHandler.handler
         });
 
-/*        enableCloudWatchLogs().then(_resp => {
+        /*        enableCloudWatchLogs().then(_resp => {
             const openSearchProps: OpenSearchWithCloudWatchProps = {
                 domainName: 'cdk-work',
                 username: 'admin',

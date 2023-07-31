@@ -6,27 +6,31 @@ const ERROR_PARSING_LOG = "Failed to parse log entry:";
 const ERROR_MISSING_USER_ID = 'Missing userId parameter';
 const ERROR_MISSING_PAGE_NO = 'Missing pageNo parameter';
 const ERROR_PROCESSING_REQUEST = 'An error occurred while processing your request.';
+const ERROR_OPEN_SEARCH_CREDS = 'OPENSEARCH_USERNAME and OPENSEARCH_PASSWORD must be defined in environment variables.'
 
 export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayProxyResult> => {
     try {
         const userId = event?.queryStringParameters?.userId;
-        const pageNo = event?.queryStringParameters?.pageNo;
-        const pageSize = process.env.PAGE_SIZE || 10;
+        const pageNo = parseInt(event?.queryStringParameters?.pageNo ?? '1');
+        const pageSize = parseInt(process.env.PAGE_SIZE ?? '10');
+        const OPENSEARCH_URL = process.env.OPENSEARCH_URL as string;
+        const username = process.env.OPENSEARCH_USERNAME;
+        const password = process.env.OPENSEARCH_PASSWORD;
+        const from = pageSize * (pageNo - 1);
         if (!userId) {
             return createResponse(400, ERROR_MISSING_USER_ID);
         }
         if (!pageNo) {
             return createResponse(400, ERROR_MISSING_PAGE_NO);
         }
-        const OPENSEARCH_URL = process.env.OPENSEARCH_URL;
+        if (!username || !password) {
+            return createResponse(500, ERROR_OPEN_SEARCH_CREDS);
+        }
         const config = {
-            auth: {
-                username: process.env.OPENSEARCH_USERNAME,
-                password: process.env.OPENSEARCH_PASSWORD,
-            },
+            auth: { username, password },
         };
         const body = {
-            from: pageSize * (pageNo - 1),
+            from: from,
             size: pageSize,
             query: {
                 bool: {
@@ -39,7 +43,7 @@ export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
             sort: [{ "@timestamp": { order: "desc" } }],
         };
         const response = await axios.post(OPENSEARCH_URL, body, config);
-        const parsedResults = response.data.hits.hits.map(hit => parseLogEntry(hit._source['@message'])).filter(Boolean);
+        const parsedResults = response.data.hits.hits.map((hit:any) => parseLogEntry(hit._source['@message'])).filter(Boolean);
         return createResponse(200, parsedResults);
     } catch (error) {
         console.error(error);

@@ -1,18 +1,19 @@
 import { Function, Runtime } from 'aws-cdk-lib/aws-lambda';
 import { Construct } from 'constructs';
-import path from "path";
+import * as path from "path";
 import {Duration} from "aws-cdk-lib";
 import {NodejsFunction} from "aws-cdk-lib/aws-lambda-nodejs";
 
 export class HitCounter extends Construct {
     public readonly handler: Function;
-    constructor(scope: Construct, id: string) {
+    constructor(scope: Construct, id: string, props: any) {
         super(scope, id);
         this.handler = new NodejsFunction(
             this,
             "HitCounterHandler",
             {
                 entry: path.join(__dirname, "application/hitCounterPrisma/index.ts"),
+                layers: [props.logLayer],
                 handler: "handler",
                 runtime: Runtime.NODEJS_18_X,
                 timeout: Duration.seconds(5),
