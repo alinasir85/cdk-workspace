@@ -80,7 +80,7 @@ const parseLogEntry = (message: string) => {
         time: extractValue(/time: '([^']*)'/, responseString),
         method: extractValue(/method: '([^']*)'/, responseString),
         endpointUrl: extractValue(/endpointUrl: '([^']*)'/, responseString),
-        status: parseInt(extractValue(/status: '(\d+)'/, responseString) || '0', 10),
+        status: parseInt(extractValue(/status: '?(\d+)'?/, responseString) || '0', 10),
         requestBody: parseJsonString(extractValue(/requestBody: '({[^]*?})'/, responseString)),
         responseBody: extractedRespBody ? parseJsonString(extractedRespBody) : extractedRespBody,
     };
