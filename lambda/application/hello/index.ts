@@ -2,7 +2,7 @@ import {logMiddleware} from "/opt/logMiddleware/logMiddleware";
 import {APIGatewayEvent} from "aws-lambda";
 
 exports.handler = logMiddleware(async function (event: APIGatewayEvent,context: any) {
-    context.logger.log("*****  In Hello ***********");
+    context.logger.log("*****  In Hello ********");
     const error = event?.queryStringParameters?.error;
     if(error) {
         return {
