@@ -12,7 +12,7 @@ export class LogGroupSubscriptionHandlerLambda extends Construct {
 
     constructor(scope: Construct, id: string, props: any) {
         super(scope, id);
-        const logProcessorLambda = new LogProcessorLambda(this, `LogProcessorLambdaToOpenSearch`, props.openSearchDomainArn);
+        const logProcessorLambda = new LogProcessorLambda(this, `logProcessorLambda`, props.openSearchDomainArn);
         this.handler = new NodejsFunction(this, 'LogGroupSubscriptionHandlerLambda', {
             entry: path.join(__dirname, "../../lambda/application/logGroupSubscription/index.ts"),
             runtime: Runtime.NODEJS_16_X,

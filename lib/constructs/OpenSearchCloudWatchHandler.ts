@@ -1,11 +1,11 @@
-import { aws_opensearchservice as opensearch, Stack } from 'aws-cdk-lib';
+import {aws_opensearchservice as opensearch, Fn, Stack} from 'aws-cdk-lib';
 import { Construct } from 'constructs';
 import {AnyPrincipal, Effect, Policy, PolicyStatement, Role, ServicePrincipal} from 'aws-cdk-lib/aws-iam';
-import * as AWS from 'aws-sdk';
 import { LogGroupSubscriptionHandlerLambda } from './LogGroupSubscriptionHandler';
 import {APIGateway, Lambda} from 'aws-sdk';
 import { Rule } from 'aws-cdk-lib/aws-events';
 import {LambdaFunction} from "aws-cdk-lib/aws-events-targets";
+import {AwsCustomResource, AwsCustomResourcePolicy} from "aws-cdk-lib/custom-resources";
 
 export interface OpenSearchWithCloudWatchProps {
     domainName: string;
@@ -19,7 +19,7 @@ export class OpenSearchCloudWatchHandler extends Construct {
         const openSearchDomain = this.createOpenSearchDomain(props);
         this.createAnonymousRoleAndPolicy(props);
         this.addAccessPolicyToOpenSearchDomain(openSearchDomain, props);
-        const logGroupSubscriptionHandlerLambda = new LogGroupSubscriptionHandlerLambda(this, 'LogGroupSubscriptionHandlerLambda', {
+        const logGroupSubscriptionHandlerLambda = new LogGroupSubscriptionHandlerLambda(this, 'logGroupSubscriptionHandlerLambda', {
             openSearchDomainArn: openSearchDomain.attrArn
         });
         this.createCloudTrailRule(logGroupSubscriptionHandlerLambda);
@@ -75,28 +75,31 @@ export class OpenSearchCloudWatchHandler extends Construct {
         };
     }
 
-    private async addSubscriptionToLogGroups(logGroupSubscriptionHandlerLambda: LogGroupSubscriptionHandlerLambda) {
-        const cloudWatchLogs = new AWS.CloudWatchLogs();
-        try {
-            console.log("**** In addSubscriptionToLogGroups ****** ")
-            const { logGroups } = await cloudWatchLogs.describeLogGroups({}).promise();
-            if (logGroups) {
-                const functionName = Stack.of(logGroupSubscriptionHandlerLambda).resolve(logGroupSubscriptionHandlerLambda.handler.functionName);
-                console.log("functionName: ", functionName.Ref);
-                await Promise.all(
-                    logGroups.map(async (logGroup) => {
-                        if (typeof logGroup.logGroupName !== 'string') return;
-                        const logGroupName = logGroup.logGroupName;
-                        await new Lambda().invoke({
-                            FunctionName: logGroupSubscriptionHandlerLambda.handler.functionName,
-                            Payload: JSON.stringify({ logGroupName })
-                        }).promise();
-                    })
-                );
-            }
-        } catch (error) {
-            console.error('Error describing log groups:', error);
-        }
+    private addSubscriptionToLogGroups(logGroupSubscriptionHandlerLambda: LogGroupSubscriptionHandlerLambda) {
+        const role = new Role(this, 'CustomResourceRole', {
+            assumedBy: new ServicePrincipal('lambda.amazonaws.com')
+        });
+        role.addToPolicy(new PolicyStatement({
+            actions: ['lambda:InvokeFunction'],
+            resources: [logGroupSubscriptionHandlerLambda.handler.functionArn],
+            effect: Effect.ALLOW
+        }));
+        const customResource = new AwsCustomResource(this, 'AddSubscriptionToLogGroups', {
+            onCreate: {
+                service: 'Lambda',
+                action: 'invoke',
+                parameters: {
+                    FunctionName: logGroupSubscriptionHandlerLambda.handler.functionName,
+                    Payload: JSON.stringify({ action: 'subscribeAllLogGroups' }),
+                },
+                physicalResourceId: {
+                    id: 'AddSubscriptionToLogGroupsResourceId'
+                }
+            },
+            policy: AwsCustomResourcePolicy.fromSdkCalls({ resources: AwsCustomResourcePolicy.ANY_RESOURCE }),
+            role
+        });
+        customResource.node.addDependency(logGroupSubscriptionHandlerLambda);
     }
 
     private async enableGatewayCloudWatchLogs() {

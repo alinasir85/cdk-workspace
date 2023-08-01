@@ -41,7 +41,6 @@ export class CdkStack extends Stack {
             password: 'Temp/123',
         };
         new OpenSearchCloudWatchHandler(this, 'OpenSearchCloudWatchHandler', openSearchProps);
-
     }
 }
 
