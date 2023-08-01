@@ -22,7 +22,10 @@
     "strictPropertyInitialization": false,
     "typeRoots": [
       "./node_modules/@types"
-    ]
+    ],
+    "paths": {
+      "/opt/logMiddleware/logMiddleware" : ["./lambda/layers/logMiddleware/logMiddleware"]
+    }
   },
   "exclude": [
     "node_modules",

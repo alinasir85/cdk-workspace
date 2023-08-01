@@ -1,15 +1,15 @@
 {
-  "name": "lambda",
+  "name": "hitcounterprisma",
   "version": "1.0.0",
   "description": "",
-  "main": "hitCounterPrisma.js",
+  "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "author": "",
-  "license": "ISC",
   "dependencies": {
     "@prisma/client": "^4.16.2",
-    "aws-sdk": "^2.1418.0"
-  }
+    "prisma": "^4.16.2"
+  },
+  "author": "",
+  "license": "ISC"
 }

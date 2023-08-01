@@ -1,0 +1,14 @@
+{
+  "name": "logmiddleware",
+  "version": "1.0.0",
+  "description": "",
+  "main": "logMiddleware.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "aws-lambda": "^1.0.7"
+  }
+}
