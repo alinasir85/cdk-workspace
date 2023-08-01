@@ -76,7 +76,8 @@ const parseLogEntry = (message: string) => {
     }
     return {
         requestId: extractValue(/requestId: '([^']*)'/, responseString),
-        time: extractValue(/time: '([^']*)'/, responseString),
+        date: extractValue(/date: '([^']*)'/, responseString),
+        time: extractValue(/time: (\d+)/, responseString),
         method: extractValue(/method: '([^']*)'/, responseString),
         endpointUrl: extractValue(/endpointUrl: '([^']*)'/, responseString),
         status: parseInt(extractValue(/status: '?(\d+)'?/, responseString) || '0', 10),
