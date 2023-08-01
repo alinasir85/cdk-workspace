@@ -2,9 +2,6 @@ import * as https from 'https';
 import * as zlib from 'zlib';
 import * as crypto from 'crypto';
 
-const endpoint = 'search-cdk-work-beeunexiue2ri37xfad4quilmy.us-east-1.es.amazonaws.com';
-const logFailedResponses = false;
-
 interface LogEvent {
     timestamp: number;
     id: string;
@@ -27,10 +24,12 @@ interface ElasticsearchAction {
     };
 }
 
+const endpoint = process.env.OPENSEARCH_URL;
+const logFailedResponses = false;
+
 exports.handler = (input: { awslogs: { data: string } }, context: any) => {
 
     console.log("************  In logProcessorHandler ***************");
-
     const zippedInput = Buffer.from(input.awslogs.data, 'base64');
 
     zlib.gunzip(zippedInput, (error, buffer) => {
