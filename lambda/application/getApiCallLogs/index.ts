@@ -2,7 +2,6 @@ import { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
 import axios from 'axios';
 
 const RESPONSE_PREFIX = 'Response: ';
-const ERROR_PARSING_LOG = "Failed to parse log entry:";
 const ERROR_MISSING_USER_ID = 'Missing userId parameter';
 const ERROR_MISSING_PAGE_NO = 'Missing pageNo parameter';
 const ERROR_PROCESSING_REQUEST = 'An error occurred while processing your request.';
