@@ -12,8 +12,8 @@ export const logMiddleware = (handler: Handler) => {
         try {
             const { requestContext, body } = event;
             const userId = requestContext?.authorizer?.claims["cognito:username"] ||
-                requestContext?.authorizer?.claims?.username ||
-                "Anonymous";
+                           requestContext?.authorizer?.claims?.username ||
+                           "Anonymous";
 
             const logger = {
                 log: (...args: any[]) => console.log(` userId: ${userId} , `, ...args),

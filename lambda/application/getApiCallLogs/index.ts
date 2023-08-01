@@ -67,20 +67,22 @@ const parseJsonString = (jsonString: string | null) => {
 
 const parseLogEntry = (message: string) => {
     const responseString = message.slice(message.indexOf(RESPONSE_PREFIX) + RESPONSE_PREFIX.length);
-    const responseBody = extractValue(/body: ('{.*}')/, responseString);
-    if (!responseBody) {
-        console.error(ERROR_PARSING_LOG, responseString);
-        return null;
+    console.log("responseString: ",responseString)
+    const responseBody = extractValue(/responseBody:\s*({[\s\S]*?}\s*})/, responseString);
+    console.log("responseBody: ", responseBody);
+    let extractedRespBody;
+    if(responseBody) {
+        extractedRespBody = extractValue(/body: ('{.*}')/, responseBody)
+        console.log("extractedRespBody: ", extractedRespBody);
     }
-
     return {
         requestId: extractValue(/requestId: '([^']*)'/, responseString),
         time: extractValue(/time: '([^']*)'/, responseString),
         method: extractValue(/method: '([^']*)'/, responseString),
         endpointUrl: extractValue(/endpointUrl: '([^']*)'/, responseString),
-        status: parseInt(extractValue(/status: (\d+)/, responseString) || '0', 10),
+        status: parseInt(extractValue(/status: '(\d+)'/, responseString) || '0', 10),
         requestBody: parseJsonString(extractValue(/requestBody: '({[^]*?})'/, responseString)),
-        responseBody: parseJsonString(responseBody),
+        responseBody: extractedRespBody ? parseJsonString(extractedRespBody) : extractedRespBody,
     };
 };
 
