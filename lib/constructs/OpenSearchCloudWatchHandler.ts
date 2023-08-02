@@ -1,8 +1,8 @@
-import {aws_opensearchservice as opensearch, Fn, Stack} from 'aws-cdk-lib';
+import {aws_opensearchservice as opensearch, Stack} from 'aws-cdk-lib';
 import { Construct } from 'constructs';
 import {AnyPrincipal, Effect, Policy, PolicyStatement, Role, ServicePrincipal} from 'aws-cdk-lib/aws-iam';
 import { LogGroupSubscriptionHandlerLambda } from './LogGroupSubscriptionHandler';
-import {APIGateway, Lambda} from 'aws-sdk';
+import {APIGateway} from 'aws-sdk';
 import { Rule } from 'aws-cdk-lib/aws-events';
 import {LambdaFunction} from "aws-cdk-lib/aws-events-targets";
 import {AwsCustomResource, AwsCustomResourcePolicy} from "aws-cdk-lib/custom-resources";
