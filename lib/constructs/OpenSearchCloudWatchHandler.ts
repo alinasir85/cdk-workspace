@@ -6,6 +6,7 @@ import {APIGateway, Lambda} from 'aws-sdk';
 import { Rule } from 'aws-cdk-lib/aws-events';
 import {LambdaFunction} from "aws-cdk-lib/aws-events-targets";
 import {AwsCustomResource, AwsCustomResourcePolicy} from "aws-cdk-lib/custom-resources";
+import {Trail} from "aws-cdk-lib/aws-cloudtrail";
 
 export interface OpenSearchWithCloudWatchProps {
     domainName: string;
@@ -141,6 +142,9 @@ export class OpenSearchCloudWatchHandler extends Construct {
     }
 
     private createCloudTrailRule(targetFunction: LogGroupSubscriptionHandlerLambda): void {
+        const trail = new Trail(this, 'AutoSubsOfLogGroupsToOpenSearch', {
+            sendToCloudWatchLogs: true,
+        });
         const rule = new Rule(this, 'CreateLogGroupRule', {
             eventPattern: {
                 source: ['aws.logs'],
